@@ -1,0 +1,48 @@
+-- =======================
+-- SEED DATA FOR DEMO
+-- Ce fichier contient des données de démonstration
+-- À utiliser uniquement en développement local
+-- =======================
+
+-- Note: Ce seed ne peut être exécuté qu'après avoir créé un utilisateur via l'interface Supabase
+-- Remplacer 'YOUR_USER_ID' par l'UUID de l'utilisateur créé
+
+-- Exemple de seed (à adapter avec un vrai user_id):
+--
+-- DO $$
+-- DECLARE
+--   demo_user_id UUID := 'YOUR_USER_ID';
+--   status_nouveau UUID;
+--   status_client UUID;
+--   source_recom UUID;
+--   contact_1 UUID;
+--   contact_2 UUID;
+-- BEGIN
+--   -- Initialiser les données par défaut
+--   PERFORM initialize_user_defaults(demo_user_id);
+--
+--   -- Récupérer les IDs des statuts
+--   SELECT id INTO status_nouveau FROM contact_statuses WHERE user_id = demo_user_id AND name = 'Nouveau';
+--   SELECT id INTO status_client FROM contact_statuses WHERE user_id = demo_user_id AND name = 'Client';
+--   SELECT id INTO source_recom FROM contact_sources WHERE user_id = demo_user_id AND name = 'Recommandation';
+--
+--   -- Créer des contacts de démonstration
+--   INSERT INTO contacts (id, user_id, first_name, last_name, phone, email, city, source_id, status_id, notes)
+--   VALUES
+--     (uuid_generate_v4(), demo_user_id, 'Sophie', 'Martin', '+33612345678', 'sophie.martin@example.com', 'Paris', source_recom, status_nouveau, 'Contact via Instagram'),
+--     (uuid_generate_v4(), demo_user_id, 'Lucas', 'Dubois', '+33698765432', 'lucas.dubois@example.com', 'Lyon', source_recom, status_client, 'Client régulier')
+--   RETURNING id INTO contact_1;
+--
+--   -- Créer des interactions
+--   INSERT INTO interactions (user_id, contact_id, type, channel, occurred_at, content)
+--   VALUES
+--     (demo_user_id, contact_1, 'message', 'whatsapp', NOW() - INTERVAL '2 days', 'Bonjour, je souhaite des informations'),
+--     (demo_user_id, contact_1, 'call_outgoing', 'phone', NOW() - INTERVAL '1 day', 'Rappel suite au message', 300);
+--
+-- END $$;
+
+-- Instructions d'utilisation:
+-- 1. Créer un compte utilisateur via Supabase Auth
+-- 2. Récupérer son UUID
+-- 3. Remplacer 'YOUR_USER_ID' dans ce fichier
+-- 4. Exécuter ce script dans l'éditeur SQL de Supabase
