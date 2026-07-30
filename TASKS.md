@@ -13,15 +13,15 @@
 - [x] Système de thèmes (variables CSS)
 - [x] README initial
 
-## Phase 2 : Authentification & Onboarding ⏳
+## Phase 2 : Authentification & Onboarding ✅
 
-- [ ] Implémentation authentification Supabase
-- [ ] Pages login/signup/reset-password
-- [ ] Middleware de protection des routes
-- [ ] Création du profil utilisateur
-- [ ] Wizard d'onboarding
-- [ ] Seed des statuts et sources par défaut
-- [ ] Layout et navigation (mobile + desktop)
+- [x] Implémentation authentification Supabase
+- [x] Pages login/signup/reset-password
+- [x] Middleware de protection des routes
+- [x] Création du profil utilisateur
+- [x] Wizard d'onboarding
+- [x] Seed des statuts et sources par défaut
+- [x] Layout et navigation (mobile + desktop)
 
 ## Phase 3 : Contacts
 
@@ -117,10 +117,7 @@
 
 ## Blocages actuels
 
-1. **Configuration Supabase** : En attente des clés API Supabase pour finaliser la connexion
-   - NEXT_PUBLIC_SUPABASE_URL
-   - NEXT_PUBLIC_SUPABASE_ANON_KEY
-   - SUPABASE_SERVICE_ROLE_KEY
+Aucun blocage. Le projet est prêt pour la Phase 3 (Contacts).
 
 ## Notes techniques
 
@@ -141,5 +138,16 @@
 ---
 
 **Dernière mise à jour** : 2026-07-30
-**Phase actuelle** : Phase 1 (Fondations) - TERMINÉE ✅
-**Prochaine étape** : Configuration Supabase et authentification
+**Phase actuelle** : Phase 2 (Authentification & Onboarding) - TERMINÉE ✅
+**Prochaine étape** : Phase 3 (Contacts)
+
+## Nouveautés Phase 2
+
+- Système d'authentification complet (login, signup, reset password, logout)
+- Wizard d'onboarding avec choix du thème
+- Navigation mobile-first avec barre inférieure
+- Sidebar desktop avec menu complet
+- Protection des routes et redirection automatique
+- Initialisation automatique des statuts et sources par défaut
+- Dashboard avec KPIs (placeholder)
+- Pages placeholder pour toutes les sections du menu
