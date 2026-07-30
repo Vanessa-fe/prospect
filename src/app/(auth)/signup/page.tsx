@@ -20,6 +20,7 @@ import {
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -32,12 +33,15 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupInput) => {
     setError(null)
+    setSuccess(false)
     setIsLoading(true)
 
     try {
       const result = await signup(data)
 
-      if (!result.success && result.error) {
+      if (result.success) {
+        setSuccess(true)
+      } else if (result.error) {
         setError(result.error)
       }
     } catch (err) {
@@ -45,6 +49,37 @@ export default function SignupPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Vérifiez votre email</CardTitle>
+          <CardDescription>
+            Un email de confirmation a été envoyé
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+            <p className="text-sm text-green-800 dark:text-green-200">
+              Nous vous avons envoyé un email de confirmation. Cliquez sur le lien dans
+              l&apos;email pour activer votre compte.
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Vous n&apos;avez pas reçu l&apos;email ? Vérifiez vos spams ou réessayez.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Link href="/login" className="w-full">
+            <Button variant="outline" className="w-full">
+              Retour à la connexion
+            </Button>
+          </Link>
+        </CardFooter>
+      </Card>
+    )
   }
 
   return (

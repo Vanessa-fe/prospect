@@ -89,16 +89,14 @@ export async function signup(data: SignupInput): Promise<ActionResult> {
       }
     }
 
-    // Créer le profil utilisateur
-    const { error: profileError } = await supabase
-      .from('user_profiles')
-      .insert({
-        id: authData.user.id,
-        onboarding_completed: false,
-      } as never)
+    // Le profil utilisateur sera créé automatiquement par un trigger PostgreSQL
+    // Pas besoin de le créer manuellement ici
 
-    if (profileError) {
-      console.error('Error creating user profile:', profileError)
+    // Si l'email nécessite une confirmation, informer l'utilisateur
+    if (authData.user.identities && authData.user.identities.length === 0) {
+      return {
+        success: true,
+      }
     }
 
     revalidatePath('/', 'layout')
