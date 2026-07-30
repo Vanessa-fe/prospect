@@ -99,6 +99,9 @@ export async function signup(data: SignupInput): Promise<ActionResult> {
       }
     }
 
+    // Attendre un peu pour que la session soit établie
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     revalidatePath('/', 'layout')
     redirect('/onboarding')
   } catch (error) {

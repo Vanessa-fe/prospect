@@ -72,8 +72,15 @@ export default function OnboardingPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
               {error && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  {error}
+                <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md space-y-2">
+                  <p>{error}</p>
+                  {error.includes('connecté') && (
+                    <p className="text-xs">
+                      <a href="/login" className="underline hover:text-destructive/80">
+                        Cliquez ici pour vous reconnecter
+                      </a>
+                    </p>
+                  )}
                 </div>
               )}
 
