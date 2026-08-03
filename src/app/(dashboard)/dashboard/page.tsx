@@ -1,5 +1,14 @@
 import { getUserProfile } from '@/lib/queries/user-profile'
 import { redirect } from 'next/navigation'
+import { getDashboardStats, getContactsByStatus, getContactsBySource } from '@/lib/queries/dashboard'
+import { getContacts } from '@/lib/queries/contacts'
+import { getUpcomingAppointments } from '@/lib/queries/appointments'
+import { getOverdueReminders } from '@/lib/queries/reminders'
+import { StatsCards } from '@/components/dashboard/stats-cards'
+import { Charts } from '@/components/dashboard/charts'
+import { RecentContacts } from '@/components/dashboard/recent-contacts'
+import { UpcomingAppointments } from '@/components/dashboard/upcoming-appointments'
+import { OverdueReminders } from '@/components/dashboard/overdue-reminders'
 
 export default async function DashboardPage() {
   const profile = await getUserProfile()
@@ -11,6 +20,17 @@ export default async function DashboardPage() {
   if (!profile.onboarding_completed) {
     redirect('/onboarding')
   }
+
+  // Charger toutes les données du dashboard
+  const [stats, contactsByStatus, contactsBySource, recentContacts, upcomingAppointments, overdueReminders] =
+    await Promise.all([
+      getDashboardStats(),
+      getContactsByStatus(),
+      getContactsBySource(),
+      getContacts({ limit: 5, sortBy: 'createdAt', sortOrder: 'desc' }),
+      getUpcomingAppointments(5),
+      getOverdueReminders(),
+    ])
 
   return (
     <div className="space-y-6">
@@ -24,30 +44,17 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-2xl font-bold">0</div>
-          <p className="text-xs text-muted-foreground">Total contacts</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-2xl font-bold">0</div>
-          <p className="text-xs text-muted-foreground">Nouveaux ce mois</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-2xl font-bold">0</div>
-          <p className="text-xs text-muted-foreground">Rendez-vous aujourd&apos;hui</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-2xl font-bold">0 €</div>
-          <p className="text-xs text-muted-foreground">CA ce mois</p>
-        </div>
-      </div>
+      {/* Cartes de statistiques */}
+      <StatsCards stats={stats} />
 
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Démarrage rapide</h2>
-        <p className="text-sm text-muted-foreground">
-          Commencez par ajouter votre premier contact pour démarrer.
-        </p>
+      {/* Graphiques */}
+      <Charts contactsByStatus={contactsByStatus} contactsBySource={contactsBySource} />
+
+      {/* Widgets */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <RecentContacts contacts={recentContacts} />
+        <UpcomingAppointments appointments={upcomingAppointments} />
+        <OverdueReminders reminders={overdueReminders} />
       </div>
     </div>
   )

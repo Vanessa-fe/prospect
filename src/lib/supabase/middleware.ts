@@ -19,21 +19,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(
-          cookiesToSet: Array<{
-            name: string
-            value: string
-            options: {
-              path?: string
-              domain?: string
-              maxAge?: number
-              expires?: Date
-              httpOnly?: boolean
-              secure?: boolean
-              sameSite?: 'lax' | 'strict' | 'none'
-            }
-          }>
-        ) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
@@ -42,6 +28,9 @@ export async function updateSession(request: NextRequest) {
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
+          )
+          Object.entries(headers).forEach(([name, value]) =>
+            supabaseResponse.headers.set(name, value)
           )
         },
       },
@@ -56,11 +45,27 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Compatibilité avec les anciens emails de récupération qui pointaient
+  // directement vers une route inexistante.
+  if (
+    request.nextUrl.pathname === '/login' &&
+    request.nextUrl.searchParams.has('code') &&
+    request.nextUrl.searchParams.get('redirect') === '/auth/update-password'
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    url.searchParams.set('next', '/update-password')
+    url.searchParams.delete('redirect')
+    return NextResponse.redirect(url)
+  }
+
   // Routes publiques
-  const publicRoutes = ['/login', '/signup', '/reset-password']
-  const isPublicRoute = publicRoutes.some((route) =>
+  const authRoutes = ['/login', '/signup', '/reset-password']
+  const isAuthRoute = authRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   )
+  const isAuthCallback = request.nextUrl.pathname === '/auth/callback'
+  const isPublicRoute = isAuthRoute || isAuthCallback
 
   // Redirection si non authentifié et accès à une route protégée
   if (!user && !isPublicRoute && request.nextUrl.pathname !== '/') {
@@ -71,7 +76,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirection si authentifié et accès à une route publique
-  if (user && isPublicRoute) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

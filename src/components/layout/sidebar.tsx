@@ -8,12 +8,14 @@ import {
   Calendar,
   DollarSign,
   Bell,
+  Download,
   Settings,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
 import { logout } from '@/lib/actions/auth'
+import { ThemeSelector } from '@/components/theme/theme-selector'
 
 const navItems = [
   {
@@ -40,6 +42,11 @@ const navItems = [
     href: '/reminders',
     label: 'Relances',
     icon: Bell,
+  },
+  {
+    href: '/import-export',
+    label: 'Import / Export',
+    icon: Download,
   },
   {
     href: '/settings',
@@ -83,7 +90,10 @@ export function Sidebar() {
             )
           })}
         </nav>
-        <div className="p-3 border-t">
+        <div className="p-3 border-t space-y-2">
+          <div className="flex justify-center">
+            <ThemeSelector />
+          </div>
           <Button
             variant="ghost"
             className="w-full justify-start"

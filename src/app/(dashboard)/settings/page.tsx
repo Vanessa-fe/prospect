@@ -1,3 +1,44 @@
+import Link from 'next/link'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge, Tag, Palette, User, ChevronRight } from 'lucide-react'
+
+const settingsCards = [
+  {
+    title: 'Statuts',
+    description: 'Gérer les statuts de vos contacts',
+    icon: Badge,
+    href: '/settings/statuses',
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-500/10',
+  },
+  {
+    title: 'Sources',
+    description: 'Gérer les sources de vos contacts',
+    icon: Tag,
+    href: '/settings/sources',
+    color: 'text-green-500',
+    bgColor: 'bg-green-500/10',
+  },
+  {
+    title: 'Thèmes',
+    description: 'Personnaliser l\'apparence',
+    icon: Palette,
+    href: '#',
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-500/10',
+    badge: 'Utiliser le sélecteur',
+  },
+  {
+    title: 'Profil',
+    description: 'Gérer votre profil utilisateur',
+    icon: User,
+    href: '#',
+    color: 'text-orange-500',
+    bgColor: 'bg-orange-500/10',
+    badge: 'Bientôt',
+  },
+]
+
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
@@ -7,10 +48,48 @@ export default function SettingsPage() {
           Configurez votre compte et vos préférences
         </p>
       </div>
-      <div className="rounded-lg border bg-card p-8 text-center">
-        <p className="text-muted-foreground">
-          Cette page sera développée dans la Phase 9
-        </p>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {settingsCards.map((card, index) => {
+          const Icon = card.icon
+          const isClickable = !card.badge || card.badge === 'Utiliser le sélecteur'
+
+          const content = (
+            <Card
+              className={`hover-lift animate-slide-in-bottom relative overflow-hidden ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+              style={{ animationDelay: `${index * 0.1}s`, animationFillMode: 'both' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+              <CardHeader className="relative z-10">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-lg ${card.bgColor}`}>
+                      <Icon className={`w-6 h-6 ${card.color}`} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">{card.title}</CardTitle>
+                      <CardDescription className="mt-1">{card.description}</CardDescription>
+                    </div>
+                  </div>
+                  {card.badge && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-muted">
+                      {card.badge}
+                    </span>
+                  )}
+                  {isClickable && <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                </div>
+              </CardHeader>
+            </Card>
+          )
+
+          return isClickable && card.href !== '#' ? (
+            <Link key={card.title} href={card.href}>
+              {content}
+            </Link>
+          ) : (
+            <div key={card.title}>{content}</div>
+          )
+        })}
       </div>
     </div>
   )

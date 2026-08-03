@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, PlusCircle, Calendar, Settings } from 'lucide-react'
+import { Home, Users, Download, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { ThemeSelector } from '@/components/theme/theme-selector'
 
 const navItems = [
   {
@@ -17,19 +18,14 @@ const navItems = [
     icon: Users,
   },
   {
-    href: '/contacts/new',
-    label: 'Ajouter',
-    icon: PlusCircle,
+    href: '/import-export',
+    label: 'Import',
+    icon: Download,
   },
   {
     href: '/appointments',
     label: 'Agenda',
     icon: Calendar,
-  },
-  {
-    href: '/settings',
-    label: 'Paramètres',
-    icon: Settings,
   },
 ]
 
@@ -59,6 +55,9 @@ export function MobileNav() {
             </Link>
           )
         })}
+        <div className="flex flex-col items-center justify-center py-2">
+          <ThemeSelector />
+        </div>
       </div>
     </nav>
   )

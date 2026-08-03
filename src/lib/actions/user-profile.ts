@@ -70,18 +70,15 @@ export async function completeOnboarding(data: OnboardingInput): Promise<ActionR
       console.error('Error initializing user defaults:', initError)
       // On ne bloque pas l'onboarding même si cette étape échoue
     }
-
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
   } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error
-    }
     return {
       success: false,
       error: 'Une erreur est survenue lors de l\'onboarding',
     }
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }
 
 /**

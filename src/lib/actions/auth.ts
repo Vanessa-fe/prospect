@@ -26,13 +26,15 @@ type ActionResult = {
  * Connexion d'un utilisateur
  */
 export async function login(data: LoginInput): Promise<ActionResult> {
+  let destination = '/dashboard'
+
   try {
     // Validation
     const validated = loginSchema.parse(data)
 
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: validated.email,
       password: validated.password,
     })
@@ -44,17 +46,28 @@ export async function login(data: LoginInput): Promise<ActionResult> {
       }
     }
 
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
-  } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('onboarding_completed')
+      .eq('id', authData.user.id)
+      .maybeSingle()
+
+    const onboardingCompleted = (profile as {
+      onboarding_completed: boolean
+    } | null)?.onboarding_completed
+
+    if (!onboardingCompleted) {
+      destination = '/onboarding'
     }
+  } catch (error) {
     return {
       success: false,
       error: 'Une erreur est survenue lors de la connexion',
     }
   }
+
+  revalidatePath('/', 'layout')
+  redirect(destination)
 }
 
 /**
@@ -92,27 +105,22 @@ export async function signup(data: SignupInput): Promise<ActionResult> {
     // Le profil utilisateur sera créé automatiquement par un trigger PostgreSQL
     // Pas besoin de le créer manuellement ici
 
-    // Si l'email nécessite une confirmation, informer l'utilisateur
-    if (authData.user.identities && authData.user.identities.length === 0) {
+    // Sans session, Supabase attend la confirmation de l'adresse email.
+    // Ne pas envoyer l'utilisateur vers une page protégée avant cette étape.
+    if (!authData.session) {
       return {
         success: true,
       }
     }
-
-    // Attendre un peu pour que la session soit établie
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    revalidatePath('/', 'layout')
-    redirect('/onboarding')
   } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error
-    }
     return {
       success: false,
       error: 'Une erreur est survenue lors de l\'inscription',
     }
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/onboarding')
 }
 
 /**
@@ -130,18 +138,15 @@ export async function logout(): Promise<ActionResult> {
         error: 'Impossible de se déconnecter',
       }
     }
-
-    revalidatePath('/', 'layout')
-    redirect('/login')
   } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error
-    }
     return {
       success: false,
       error: 'Une erreur est survenue lors de la déconnexion',
     }
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/login')
 }
 
 /**
@@ -155,7 +160,7 @@ export async function resetPassword(data: ResetPasswordInput): Promise<ActionRes
     const supabase = await createClient()
 
     const { error } = await supabase.auth.resetPasswordForEmail(validated.email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/update-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/update-password`,
     })
 
     if (error) {
@@ -196,16 +201,13 @@ export async function updatePassword(data: UpdatePasswordInput): Promise<ActionR
         error: 'Impossible de mettre à jour le mot de passe',
       }
     }
-
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
   } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error
-    }
     return {
       success: false,
       error: 'Une erreur est survenue lors de la mise à jour',
     }
   }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }
