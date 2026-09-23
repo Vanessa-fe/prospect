@@ -2,14 +2,14 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import type { ReminderWithContact } from '@/types'
+import type { ReminderWithRelations } from '@/types'
 import { AlertCircle, Clock } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { reminderPriorityLabels, reminderPriorityBadgeVariants } from '@/lib/validations/reminder'
 
 interface OverdueRemindersProps {
-  reminders: ReminderWithContact[]
+  reminders: ReminderWithRelations[]
 }
 
 export function OverdueReminders({ reminders }: OverdueRemindersProps) {
@@ -35,7 +35,9 @@ export function OverdueReminders({ reminders }: OverdueRemindersProps) {
                 ? [reminder.contact.first_name, reminder.contact.last_name]
                     .filter(Boolean)
                     .join(' ') || 'Sans nom'
-                : 'Sans contact'
+                : reminder.agency
+                  ? reminder.agency.name
+                  : 'Sans contact'
 
               return (
                 <Link
@@ -49,7 +51,7 @@ export function OverdueReminders({ reminders }: OverdueRemindersProps) {
                     </div>
                     <div>
                       <p className="font-medium text-red-700">{reminder.title}</p>
-                      {reminder.contact && (
+                      {(reminder.contact || reminder.agency) && (
                         <p className="text-sm text-muted-foreground">{contactName}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1">

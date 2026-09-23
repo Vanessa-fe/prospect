@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge, Tag, Palette, User, ChevronRight } from 'lucide-react'
+import { Badge, Tag, Palette, User, ChevronRight, Building2, Compass } from 'lucide-react'
 
 const settingsCards = [
   {
@@ -18,6 +18,22 @@ const settingsCards = [
     href: '/settings/sources',
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
+  },
+  {
+    title: 'Statuts agences',
+    description: 'Gérer les statuts de vos agences',
+    icon: Building2,
+    href: '/settings/agency-statuses',
+    color: 'text-cyan-500',
+    bgColor: 'bg-cyan-500/10',
+  },
+  {
+    title: 'Sources agences',
+    description: 'Gérer les sources de vos agences',
+    icon: Compass,
+    href: '/settings/agency-sources',
+    color: 'text-indigo-500',
+    bgColor: 'bg-indigo-500/10',
   },
   {
     title: 'Thèmes',

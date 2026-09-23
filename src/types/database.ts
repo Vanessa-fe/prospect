@@ -324,6 +324,7 @@ export type Database = {
           id: string
           user_id: string
           contact_id: string | null
+          agency_id: string | null
           title: string
           due_at: string
           completed_at: string | null
@@ -334,6 +335,7 @@ export type Database = {
           id?: string
           user_id: string
           contact_id?: string | null
+          agency_id?: string | null
           title: string
           due_at: string
           completed_at?: string | null
@@ -344,10 +346,181 @@ export type Database = {
           id?: string
           user_id?: string
           contact_id?: string | null
+          agency_id?: string | null
           title?: string
           due_at?: string
           completed_at?: string | null
           priority?: 'low' | 'medium' | 'high'
+          created_at?: string
+        }
+      }
+      agency_statuses: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          color: string
+          order: number
+          is_default: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          color: string
+          order: number
+          is_default?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          color?: string
+          order?: number
+          is_default?: boolean
+          created_at?: string
+        }
+      }
+      agency_sources: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          icon: string | null
+          order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          icon?: string | null
+          order: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          icon?: string | null
+          order?: number
+          created_at?: string
+        }
+      }
+      agencies: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          website: string | null
+          city: string | null
+          size_range: '1-5' | '6-15' | '16-50' | '50+' | null
+          detected_stack: string[]
+          stack_detected_at: string | null
+          stack_evidence: Json | null
+          signal_type: 'job_posting_dev' | 'nextjs_portfolio' | 'ai_offer' | 'other' | null
+          signal_url: string | null
+          signal_detected_at: string | null
+          contact_name: string | null
+          contact_role: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          preferred_channel: 'email' | 'linkedin' | 'phone' | 'other' | null
+          status_id: string | null
+          source_id: string | null
+          notes: string | null
+          last_interaction_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          website?: string | null
+          city?: string | null
+          size_range?: '1-5' | '6-15' | '16-50' | '50+' | null
+          detected_stack?: string[]
+          stack_detected_at?: string | null
+          stack_evidence?: Json | null
+          signal_type?: 'job_posting_dev' | 'nextjs_portfolio' | 'ai_offer' | 'other' | null
+          signal_url?: string | null
+          signal_detected_at?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          preferred_channel?: 'email' | 'linkedin' | 'phone' | 'other' | null
+          status_id?: string | null
+          source_id?: string | null
+          notes?: string | null
+          last_interaction_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          website?: string | null
+          city?: string | null
+          size_range?: '1-5' | '6-15' | '16-50' | '50+' | null
+          detected_stack?: string[]
+          stack_detected_at?: string | null
+          stack_evidence?: Json | null
+          signal_type?: 'job_posting_dev' | 'nextjs_portfolio' | 'ai_offer' | 'other' | null
+          signal_url?: string | null
+          signal_detected_at?: string | null
+          contact_name?: string | null
+          contact_role?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          preferred_channel?: 'email' | 'linkedin' | 'phone' | 'other' | null
+          status_id?: string | null
+          source_id?: string | null
+          notes?: string | null
+          last_interaction_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      agency_interactions: {
+        Row: {
+          id: string
+          user_id: string
+          agency_id: string
+          type: 'message' | 'call_incoming' | 'call_outgoing' | 'call_missed' | 'note' | 'reminder' | 'system_event'
+          channel: string | null
+          occurred_at: string
+          content: string | null
+          duration: number | null
+          direction: 'incoming' | 'outgoing' | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          agency_id: string
+          type: 'message' | 'call_incoming' | 'call_outgoing' | 'call_missed' | 'note' | 'reminder' | 'system_event'
+          channel?: string | null
+          occurred_at: string
+          content?: string | null
+          duration?: number | null
+          direction?: 'incoming' | 'outgoing' | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          agency_id?: string
+          type?: 'message' | 'call_incoming' | 'call_outgoing' | 'call_missed' | 'note' | 'reminder' | 'system_event'
+          channel?: string | null
+          occurred_at?: string
+          content?: string | null
+          duration?: number | null
+          direction?: 'incoming' | 'outgoing' | null
           created_at?: string
         }
       }

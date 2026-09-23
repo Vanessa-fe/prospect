@@ -48,10 +48,25 @@ export async function createReminder(
       }
     }
 
+    // Si un agency_id est fourni, vérifier qu'elle appartient à l'utilisateur
+    if (validated.agencyId) {
+      const { data: agency } = await supabase
+        .from('agencies')
+        .select('id')
+        .eq('id', validated.agencyId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (!agency) {
+        return { success: false, error: 'Agence non trouvée' }
+      }
+    }
+
     // Préparer les données pour l'insertion
     const insertData = {
       user_id: user.id,
       contact_id: validated.contactId,
+      agency_id: validated.agencyId,
       title: validated.title,
       due_at: validated.dueAt,
       priority: validated.priority,
@@ -71,6 +86,10 @@ export async function createReminder(
     revalidatePath('/reminders')
     if (validated.contactId) {
       revalidatePath(`/contacts/${validated.contactId}`)
+    }
+    if (validated.agencyId) {
+      revalidatePath(`/agencies/${validated.agencyId}`)
+      revalidatePath('/agencies')
     }
 
     return {
@@ -108,7 +127,7 @@ export async function updateReminder(
     // Vérifier que la relance appartient à l'utilisateur
     const { data: reminder } = await supabase
       .from('reminders')
-      .select('id, contact_id')
+      .select('id, contact_id, agency_id')
       .eq('id', reminderId)
       .eq('user_id', user.id)
       .single()
@@ -131,10 +150,25 @@ export async function updateReminder(
       }
     }
 
+    // Si un agency_id est fourni, vérifier qu'elle appartient à l'utilisateur
+    if (validated.agencyId) {
+      const { data: agency } = await supabase
+        .from('agencies')
+        .select('id')
+        .eq('id', validated.agencyId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (!agency) {
+        return { success: false, error: 'Agence non trouvée' }
+      }
+    }
+
     // Préparer les données pour la mise à jour
     const updateData: Record<string, unknown> = {}
 
     if (validated.contactId !== undefined) updateData.contact_id = validated.contactId
+    if (validated.agencyId !== undefined) updateData.agency_id = validated.agencyId
     if (validated.title !== undefined) updateData.title = validated.title
     if (validated.dueAt !== undefined) updateData.due_at = validated.dueAt
     if (validated.priority !== undefined) updateData.priority = validated.priority
@@ -154,6 +188,11 @@ export async function updateReminder(
     const contactId = (reminder as { contact_id: string | null }).contact_id
     if (contactId) {
       revalidatePath(`/contacts/${contactId}`)
+    }
+    const agencyId = (reminder as { agency_id: string | null }).agency_id
+    if (agencyId) {
+      revalidatePath(`/agencies/${agencyId}`)
+      revalidatePath('/agencies')
     }
 
     return { success: true }
@@ -182,7 +221,7 @@ export async function completeReminder(reminderId: string): Promise<ActionResult
     // Vérifier que la relance appartient à l'utilisateur
     const { data: reminder } = await supabase
       .from('reminders')
-      .select('contact_id')
+      .select('contact_id, agency_id')
       .eq('id', reminderId)
       .eq('user_id', user.id)
       .single()
@@ -206,6 +245,11 @@ export async function completeReminder(reminderId: string): Promise<ActionResult
     const contactId = (reminder as { contact_id: string | null }).contact_id
     if (contactId) {
       revalidatePath(`/contacts/${contactId}`)
+    }
+    const agencyId = (reminder as { agency_id: string | null }).agency_id
+    if (agencyId) {
+      revalidatePath(`/agencies/${agencyId}`)
+      revalidatePath('/agencies')
     }
 
     return { success: true }
@@ -234,7 +278,7 @@ export async function uncompleteReminder(reminderId: string): Promise<ActionResu
     // Vérifier que la relance appartient à l'utilisateur
     const { data: reminder } = await supabase
       .from('reminders')
-      .select('contact_id')
+      .select('contact_id, agency_id')
       .eq('id', reminderId)
       .eq('user_id', user.id)
       .single()
@@ -258,6 +302,11 @@ export async function uncompleteReminder(reminderId: string): Promise<ActionResu
     const contactId = (reminder as { contact_id: string | null }).contact_id
     if (contactId) {
       revalidatePath(`/contacts/${contactId}`)
+    }
+    const agencyId = (reminder as { agency_id: string | null }).agency_id
+    if (agencyId) {
+      revalidatePath(`/agencies/${agencyId}`)
+      revalidatePath('/agencies')
     }
 
     return { success: true }
@@ -286,7 +335,7 @@ export async function deleteReminder(reminderId: string): Promise<ActionResult> 
     // Vérifier que la relance appartient à l'utilisateur
     const { data: reminder } = await supabase
       .from('reminders')
-      .select('contact_id')
+      .select('contact_id, agency_id')
       .eq('id', reminderId)
       .eq('user_id', user.id)
       .single()
@@ -310,6 +359,11 @@ export async function deleteReminder(reminderId: string): Promise<ActionResult> 
     const contactId = (reminder as { contact_id: string | null }).contact_id
     if (contactId) {
       revalidatePath(`/contacts/${contactId}`)
+    }
+    const agencyId = (reminder as { agency_id: string | null }).agency_id
+    if (agencyId) {
+      revalidatePath(`/agencies/${agencyId}`)
+      revalidatePath('/agencies')
     }
 
     return { success: true }

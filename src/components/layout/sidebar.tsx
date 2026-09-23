@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Home,
   Users,
+  Building2,
   Calendar,
   DollarSign,
   Bell,
@@ -27,6 +28,11 @@ const navItems = [
     href: '/contacts',
     label: 'Contacts',
     icon: Users,
+  },
+  {
+    href: '/agencies',
+    label: 'Agences',
+    icon: Building2,
   },
   {
     href: '/appointments',

@@ -14,6 +14,10 @@ export type Interaction = Database['public']['Tables']['interactions']['Row']
 export type Appointment = Database['public']['Tables']['appointments']['Row']
 export type Payment = Database['public']['Tables']['payments']['Row']
 export type Reminder = Database['public']['Tables']['reminders']['Row']
+export type AgencyStatus = Database['public']['Tables']['agency_statuses']['Row']
+export type AgencySource = Database['public']['Tables']['agency_sources']['Row']
+export type Agency = Database['public']['Tables']['agencies']['Row']
+export type AgencyInteraction = Database['public']['Tables']['agency_interactions']['Row']
 
 // Types d'insertion
 export type InsertUserProfile = Database['public']['Tables']['user_profiles']['Insert']
@@ -25,6 +29,10 @@ export type InsertInteraction = Database['public']['Tables']['interactions']['In
 export type InsertAppointment = Database['public']['Tables']['appointments']['Insert']
 export type InsertPayment = Database['public']['Tables']['payments']['Insert']
 export type InsertReminder = Database['public']['Tables']['reminders']['Insert']
+export type InsertAgencyStatus = Database['public']['Tables']['agency_statuses']['Insert']
+export type InsertAgencySource = Database['public']['Tables']['agency_sources']['Insert']
+export type InsertAgency = Database['public']['Tables']['agencies']['Insert']
+export type InsertAgencyInteraction = Database['public']['Tables']['agency_interactions']['Insert']
 
 // Types de mise à jour
 export type UpdateUserProfile = Database['public']['Tables']['user_profiles']['Update']
@@ -36,6 +44,10 @@ export type UpdateInteraction = Database['public']['Tables']['interactions']['Up
 export type UpdateAppointment = Database['public']['Tables']['appointments']['Update']
 export type UpdatePayment = Database['public']['Tables']['payments']['Update']
 export type UpdateReminder = Database['public']['Tables']['reminders']['Update']
+export type UpdateAgencyStatus = Database['public']['Tables']['agency_statuses']['Update']
+export type UpdateAgencySource = Database['public']['Tables']['agency_sources']['Update']
+export type UpdateAgency = Database['public']['Tables']['agencies']['Update']
+export type UpdateAgencyInteraction = Database['public']['Tables']['agency_interactions']['Update']
 
 // Types énumérés
 export type RiskLevel = Contact['risk_level']
@@ -46,6 +58,11 @@ export type AppointmentStatus = Appointment['status']
 export type PaymentMethod = NonNullable<Payment['payment_method']>
 export type PaymentStatus = Payment['payment_status']
 export type ReminderPriority = Reminder['priority']
+export type SizeRange = NonNullable<Agency['size_range']>
+export type SignalType = NonNullable<Agency['signal_type']>
+export type PreferredChannel = NonNullable<Agency['preferred_channel']>
+export type AgencyInteractionType = AgencyInteraction['type']
+export type AgencyInteractionDirection = NonNullable<AgencyInteraction['direction']>
 
 // Types composés pour les vues avec relations
 export type ContactWithRelations = Contact & {
@@ -67,8 +84,18 @@ export type PaymentWithRelations = Payment & {
   appointment?: Appointment | null
 }
 
-export type ReminderWithContact = Reminder & {
+export type ReminderWithRelations = Reminder & {
   contact?: Contact | null
+  agency?: Agency | null
+}
+
+export type AgencyWithRelations = Agency & {
+  status?: AgencyStatus | null
+  source?: AgencySource | null
+}
+
+export type AgencyInteractionWithAgency = AgencyInteraction & {
+  agency: Agency
 }
 
 // Types pour les formulaires
@@ -77,6 +104,8 @@ export type AppointmentFormData = Omit<InsertAppointment, 'id' | 'user_id' | 'cr
 export type PaymentFormData = Omit<InsertPayment, 'id' | 'user_id' | 'created_at'>
 export type ReminderFormData = Omit<InsertReminder, 'id' | 'user_id' | 'created_at'>
 export type InteractionFormData = Omit<InsertInteraction, 'id' | 'user_id' | 'created_at'>
+export type AgencyFormData = Omit<InsertAgency, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'last_interaction_at'>
+export type AgencyInteractionFormData = Omit<InsertAgencyInteraction, 'id' | 'user_id' | 'created_at'>
 
 // Types pour les statistiques du dashboard
 export type DashboardStats = {

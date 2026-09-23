@@ -27,14 +27,27 @@ export const reminderPriorityBadgeVariants: Record<
 
 const baseReminderSchema = z.object({
   contactId: z.string().uuid().optional().nullable(),
+  agencyId: z.string().uuid().optional().nullable(),
   title: z.string().min(1, 'Le titre est requis').max(200).trim(),
   dueAt: z.coerce.date(),
   priority: z.enum(reminderPriorities).default('medium'),
 })
 
-export const createReminderSchema = baseReminderSchema
+export const createReminderSchema = baseReminderSchema.refine(
+  (data) => !(data.contactId && data.agencyId),
+  {
+    message: 'Une relance ne peut viser qu\'un seul contact ou une seule agence',
+    path: ['agencyId'],
+  }
+)
 
-export const updateReminderSchema = baseReminderSchema.partial()
+export const updateReminderSchema = baseReminderSchema.partial().refine(
+  (data) => !(data.contactId && data.agencyId),
+  {
+    message: 'Une relance ne peut viser qu\'un seul contact ou une seule agence',
+    path: ['agencyId'],
+  }
+)
 
 export type CreateReminderInput = z.infer<typeof createReminderSchema>
 export type UpdateReminderInput = z.infer<typeof updateReminderSchema>

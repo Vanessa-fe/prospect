@@ -1,13 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
-import type { ReminderWithContact } from '@/types'
+import type { ReminderWithRelations } from '@/types'
+
+const REMINDER_SELECT = `
+  *,
+  contact:contacts(*),
+  agency:agencies(*)
+`
 
 export async function getReminders(options?: {
   limit?: number
   offset?: number
   contactId?: string
+  agencyId?: string
   priority?: string
   includeCompleted?: boolean
-}): Promise<ReminderWithContact[]> {
+}): Promise<ReminderWithRelations[]> {
   const supabase = await createClient()
 
   const {
@@ -20,18 +27,17 @@ export async function getReminders(options?: {
 
   let query = supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('user_id', user.id)
     .order('due_at', { ascending: true })
 
   // Filtres
   if (options?.contactId) {
     query = query.eq('contact_id', options.contactId)
+  }
+
+  if (options?.agencyId) {
+    query = query.eq('agency_id', options.agencyId)
   }
 
   if (options?.priority) {
@@ -58,10 +64,10 @@ export async function getReminders(options?: {
     return []
   }
 
-  return (data || []) as ReminderWithContact[]
+  return (data || []) as ReminderWithRelations[]
 }
 
-export async function getReminderById(reminderId: string): Promise<ReminderWithContact | null> {
+export async function getReminderById(reminderId: string): Promise<ReminderWithRelations | null> {
   const supabase = await createClient()
 
   const {
@@ -74,12 +80,7 @@ export async function getReminderById(reminderId: string): Promise<ReminderWithC
 
   const { data, error } = await supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('id', reminderId)
     .eq('user_id', user.id)
     .single()
@@ -89,15 +90,20 @@ export async function getReminderById(reminderId: string): Promise<ReminderWithC
     return null
   }
 
-  return data as ReminderWithContact
+  return data as ReminderWithRelations
 }
 
-export async function getContactReminders(contactId: string): Promise<ReminderWithContact[]> {
+export async function getContactReminders(contactId: string): Promise<ReminderWithRelations[]> {
   return getReminders({ contactId })
+}
+
+export async function getAgencyReminders(agencyId: string): Promise<ReminderWithRelations[]> {
+  return getReminders({ agencyId })
 }
 
 export async function getRemindersCount(options?: {
   contactId?: string
+  agencyId?: string
   priority?: string
   includeCompleted?: boolean
 }): Promise<number> {
@@ -120,6 +126,10 @@ export async function getRemindersCount(options?: {
     query = query.eq('contact_id', options.contactId)
   }
 
+  if (options?.agencyId) {
+    query = query.eq('agency_id', options.agencyId)
+  }
+
   if (options?.priority) {
     query = query.eq('priority', options.priority)
   }
@@ -133,7 +143,7 @@ export async function getRemindersCount(options?: {
   return count ?? 0
 }
 
-export async function getOverdueReminders(): Promise<ReminderWithContact[]> {
+export async function getOverdueReminders(): Promise<ReminderWithRelations[]> {
   const supabase = await createClient()
 
   const {
@@ -148,12 +158,7 @@ export async function getOverdueReminders(): Promise<ReminderWithContact[]> {
 
   const { data, error } = await supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('user_id', user.id)
     .is('completed_at', null)
     .lt('due_at', now)
@@ -164,10 +169,10 @@ export async function getOverdueReminders(): Promise<ReminderWithContact[]> {
     return []
   }
 
-  return (data || []) as ReminderWithContact[]
+  return (data || []) as ReminderWithRelations[]
 }
 
-export async function getDueTodayReminders(): Promise<ReminderWithContact[]> {
+export async function getDueTodayReminders(): Promise<ReminderWithRelations[]> {
   const supabase = await createClient()
 
   const {
@@ -184,12 +189,7 @@ export async function getDueTodayReminders(): Promise<ReminderWithContact[]> {
 
   const { data, error } = await supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('user_id', user.id)
     .is('completed_at', null)
     .gte('due_at', startOfDay.toISOString())
@@ -201,10 +201,10 @@ export async function getDueTodayReminders(): Promise<ReminderWithContact[]> {
     return []
   }
 
-  return (data || []) as ReminderWithContact[]
+  return (data || []) as ReminderWithRelations[]
 }
 
-export async function getUpcomingReminders(days: number = 7): Promise<ReminderWithContact[]> {
+export async function getUpcomingReminders(days: number = 7): Promise<ReminderWithRelations[]> {
   const supabase = await createClient()
 
   const {
@@ -220,12 +220,7 @@ export async function getUpcomingReminders(days: number = 7): Promise<ReminderWi
 
   const { data, error } = await supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('user_id', user.id)
     .is('completed_at', null)
     .gte('due_at', now.toISOString())
@@ -237,16 +232,16 @@ export async function getUpcomingReminders(days: number = 7): Promise<ReminderWi
     return []
   }
 
-  return (data || []) as ReminderWithContact[]
+  return (data || []) as ReminderWithRelations[]
 }
 
-export async function getHighPriorityReminders(): Promise<ReminderWithContact[]> {
+export async function getHighPriorityReminders(): Promise<ReminderWithRelations[]> {
   return getReminders({ priority: 'high', includeCompleted: false })
 }
 
 export async function getCompletedReminders(options?: {
   limit?: number
-}): Promise<ReminderWithContact[]> {
+}): Promise<ReminderWithRelations[]> {
   const supabase = await createClient()
 
   const {
@@ -259,12 +254,7 @@ export async function getCompletedReminders(options?: {
 
   let query = supabase
     .from('reminders')
-    .select(
-      `
-      *,
-      contact:contacts(*)
-    `
-    )
+    .select(REMINDER_SELECT)
     .eq('user_id', user.id)
     .not('completed_at', 'is', null)
     .order('completed_at', { ascending: false })
@@ -280,5 +270,40 @@ export async function getCompletedReminders(options?: {
     return []
   }
 
-  return (data || []) as ReminderWithContact[]
+  return (data || []) as ReminderWithRelations[]
+}
+
+/**
+ * Relances d'agences dues aujourd'hui ou en retard (non complétées).
+ * Utilisé par la section "Aujourd'hui" de la page /agencies.
+ */
+export async function getTodayAgencyReminders(): Promise<ReminderWithRelations[]> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return []
+  }
+
+  const now = new Date()
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+
+  const { data, error } = await supabase
+    .from('reminders')
+    .select(REMINDER_SELECT)
+    .eq('user_id', user.id)
+    .not('agency_id', 'is', null)
+    .is('completed_at', null)
+    .lte('due_at', endOfDay.toISOString())
+    .order('due_at', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching today agency reminders:', error)
+    return []
+  }
+
+  return (data || []) as ReminderWithRelations[]
 }

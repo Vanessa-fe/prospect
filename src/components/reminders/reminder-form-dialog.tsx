@@ -34,10 +34,11 @@ import { Plus, Bell } from 'lucide-react'
 
 interface ReminderFormDialogProps {
   contactId?: string
+  agencyId?: string
   triggerVariant?: 'default' | 'icon'
 }
 
-export function ReminderFormDialog({ contactId, triggerVariant = 'default' }: ReminderFormDialogProps) {
+export function ReminderFormDialog({ contactId, agencyId, triggerVariant = 'default' }: ReminderFormDialogProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
@@ -54,6 +55,7 @@ export function ReminderFormDialog({ contactId, triggerVariant = 'default' }: Re
     resolver: zodResolver(createReminderSchema),
     defaultValues: {
       contactId: contactId ?? undefined,
+      agencyId: agencyId ?? undefined,
       priority: 'medium',
     },
   })

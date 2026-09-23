@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { completeReminder, uncompleteReminder, deleteReminder } from '@/lib/actions/reminders'
 import { useToast } from '@/lib/hooks/use-toast'
-import type { ReminderWithContact } from '@/types'
+import type { ReminderWithRelations } from '@/types'
 import {
   reminderPriorities,
   reminderPriorityLabels,
@@ -24,18 +24,19 @@ import {
   getReminderUrgency,
   isReminderOverdue,
 } from '@/lib/validations/reminder'
-import { Clock, User, Trash2, AlertCircle } from 'lucide-react'
+import { Clock, User, Building2, Trash2, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { ReminderFormDialog } from './reminder-form-dialog'
 
 interface RemindersListProps {
-  reminders: ReminderWithContact[]
+  reminders: ReminderWithRelations[]
   totalCount: number
   contactId?: string
+  agencyId?: string
 }
 
-export function RemindersList({ reminders, totalCount, contactId }: RemindersListProps) {
+export function RemindersList({ reminders, totalCount, contactId, agencyId }: RemindersListProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
@@ -106,7 +107,7 @@ export function RemindersList({ reminders, totalCount, contactId }: RemindersLis
       groups[urgency]?.push(reminder)
       return groups
     },
-    {} as Record<string, ReminderWithContact[]>
+    {} as Record<string, ReminderWithRelations[]>
   )
 
   const urgencyLabels = {
@@ -155,7 +156,7 @@ export function RemindersList({ reminders, totalCount, contactId }: RemindersLis
             </SelectContent>
           </Select>
 
-          <ReminderFormDialog contactId={contactId} />
+          <ReminderFormDialog contactId={contactId} agencyId={agencyId} />
         </div>
       </div>
 
@@ -236,6 +237,18 @@ export function RemindersList({ reminders, totalCount, contactId }: RemindersLis
                                     {[reminder.contact.first_name, reminder.contact.last_name]
                                       .filter(Boolean)
                                       .join(' ') || 'Sans nom'}
+                                  </Link>
+                                </div>
+                              )}
+
+                              {reminder.agency && (
+                                <div className="flex items-center gap-2">
+                                  <Building2 className="w-4 h-4" />
+                                  <Link
+                                    href={`/agencies/${reminder.agency_id}`}
+                                    className="hover:underline"
+                                  >
+                                    {reminder.agency.name}
                                   </Link>
                                 </div>
                               )}
