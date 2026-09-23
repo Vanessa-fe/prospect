@@ -88,6 +88,13 @@ export const createAgencySchema = z.object({
     .nullable()
     .or(z.literal('')),
   contactPhone: contactPhoneSchema,
+  contactLinkedinUrl: z
+    .string()
+    .max(500, 'L\'URL LinkedIn est trop longue')
+    .trim()
+    .optional()
+    .nullable()
+    .or(z.literal('')),
   preferredChannel: z
     .enum(preferredChannels, {
       errorMap: () => ({ message: 'Le canal préféré n\'est pas valide' }),
@@ -151,6 +158,26 @@ export function normalizeWebsite(website: string): string | null {
   normalized = normalized.replace(/\/+$/, '')
 
   return normalized || null
+}
+
+/**
+ * Extrait le nom de domaine nu (sans protocole ni www.) d'une URL de site web,
+ * pour l'utiliser comme paramètre `domain` des API d'enrichissement (Hunter.io).
+ * Accepte aussi bien "vercel.com" que "https://vercel.com/fr".
+ */
+export function extractDomain(website: string): string | null {
+  if (!website || website.trim() === '') return null
+
+  const withProtocol = website.trim().match(/^https?:\/\//)
+    ? website.trim()
+    : `https://${website.trim()}`
+
+  try {
+    const hostname = new URL(withProtocol).hostname.toLowerCase()
+    return hostname.replace(/^www\./, '') || null
+  } catch {
+    return null
+  }
 }
 
 /**

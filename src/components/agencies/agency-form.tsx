@@ -26,7 +26,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/lib/hooks/use-toast'
 import type { AgencyWithRelations, AgencyStatus, AgencySource } from '@/types'
-import { Loader2, Search } from 'lucide-react'
+import { Loader2, Search, UserSearch, Linkedin } from 'lucide-react'
+
+type ContactCandidate = {
+  name: string | null
+  position: string | null
+  email: string
+  linkedinUrl: string | null
+  confidence: number | null
+  seniority: string | null
+  isTechLead: boolean
+}
 
 interface AgencyFormProps {
   agency?: AgencyWithRelations
@@ -62,6 +72,8 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isFindingContact, setIsFindingContact] = useState(false)
+  const [contactCandidates, setContactCandidates] = useState<ContactCandidate[] | null>(null)
 
   const isEditing = !!agency
 
@@ -86,6 +98,7 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
           contactRole: agency.contact_role ?? '',
           contactEmail: agency.contact_email ?? '',
           contactPhone: agency.contact_phone ?? '',
+          contactLinkedinUrl: agency.contact_linkedin_url ?? '',
           preferredChannel: agency.preferred_channel ?? undefined,
           statusId: agency.status_id ?? undefined,
           sourceId: agency.source_id ?? undefined,
@@ -165,6 +178,74 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
     } finally {
       setIsAnalyzing(false)
     }
+  }
+
+  const handleFindContact = async () => {
+    const website = getValues('website')
+
+    if (!website) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Renseignez d\'abord un site web pour chercher un contact',
+      })
+      return
+    }
+
+    setIsFindingContact(true)
+    setContactCandidates(null)
+
+    try {
+      const response = await fetch('/api/agencies/find-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ website }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: result.error || 'Impossible de trouver un contact',
+        })
+        return
+      }
+
+      setContactCandidates(result.candidates || [])
+
+      if (!result.candidates || result.candidates.length === 0) {
+        toast({
+          title: 'Aucun résultat',
+          description: 'Hunter.io n\'a trouvé aucun contact pour ce domaine',
+        })
+      }
+    } catch (err) {
+      console.error('Find contact error:', err)
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de contacter le service d\'enrichissement',
+      })
+    } finally {
+      setIsFindingContact(false)
+    }
+  }
+
+  const applyCandidate = (candidate: ContactCandidate) => {
+    if (candidate.name) setValue('contactName', candidate.name)
+    if (candidate.position) setValue('contactRole', candidate.position)
+    setValue('contactEmail', candidate.email)
+    if (candidate.linkedinUrl) {
+      setValue('contactLinkedinUrl', candidate.linkedinUrl)
+      setValue('preferredChannel', 'linkedin')
+    }
+    setContactCandidates(null)
+    toast({
+      title: 'Contact appliqué',
+      description: `Les champs ont été pré-remplis avec ${candidate.name || candidate.email}. Vérifiez avant d'enregistrer.`,
+    })
   }
 
   const onSubmit = async (data: CreateAgencyInput) => {
@@ -356,7 +437,69 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
 
           {/* Contact humain */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Contact</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleFindContact}
+                disabled={isLoading || isFindingContact}
+              >
+                {isFindingContact ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <UserSearch className="w-4 h-4" />
+                )}
+                <span className="ml-2">Trouver un contact</span>
+              </Button>
+            </div>
+
+            {contactCandidates && contactCandidates.length > 0 && (
+              <div className="space-y-2 p-3 rounded-md border bg-muted/30">
+                <p className="text-sm text-muted-foreground">
+                  Résultats Hunter.io — les profils CTO / Tech Lead sont mis en avant :
+                </p>
+                {contactCandidates.map((candidate, index) => (
+                  <div
+                    key={`${candidate.email}-${index}`}
+                    className="flex items-center justify-between gap-3 p-2 rounded-md bg-background border"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium truncate">
+                          {candidate.name || candidate.email}
+                        </span>
+                        {candidate.isTechLead && (
+                          <Badge variant="default">Tech lead</Badge>
+                        )}
+                        {candidate.linkedinUrl && (
+                          <a
+                            href={candidate.linkedinUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Linkedin className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          </a>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {candidate.position || 'Poste inconnu'} · {candidate.email}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => applyCandidate(candidate)}
+                    >
+                      Choisir
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -405,6 +548,19 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
                   {...register('contactPhone')}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contactLinkedinUrl">Profil LinkedIn</Label>
+              <Input
+                id="contactLinkedinUrl"
+                placeholder="https://www.linkedin.com/in/..."
+                disabled={isLoading}
+                {...register('contactLinkedinUrl')}
+              />
+              {errors.contactLinkedinUrl && (
+                <p className="text-sm text-destructive">{errors.contactLinkedinUrl.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">

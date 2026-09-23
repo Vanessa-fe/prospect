@@ -80,6 +80,7 @@ export async function createAgency(
       contact_role: validated.contactRole || null,
       contact_email: validated.contactEmail || null,
       contact_phone: validated.contactPhone || null,
+      contact_linkedin_url: validated.contactLinkedinUrl || null,
       preferred_channel: validated.preferredChannel || null,
       status_id: validated.statusId || null,
       source_id: validated.sourceId || null,
@@ -206,6 +207,9 @@ export async function updateAgency(
     }
     if (validated.contactPhone !== undefined) {
       updateData.contact_phone = validated.contactPhone
+    }
+    if (validated.contactLinkedinUrl !== undefined) {
+      updateData.contact_linkedin_url = validated.contactLinkedinUrl
     }
     if (validated.preferredChannel !== undefined) {
       updateData.preferred_channel = validated.preferredChannel

@@ -26,6 +26,7 @@ import {
   User,
   Mail,
   Phone,
+  Linkedin,
   Tag,
   FileText,
   Zap,
@@ -211,7 +212,10 @@ export function AgencyDetail({ agency, interactions, reminders }: AgencyDetailPr
           )}
 
           {/* Contact humain */}
-          {(agency.contact_name || agency.contact_email || agency.contact_phone) && (
+          {(agency.contact_name ||
+            agency.contact_email ||
+            agency.contact_phone ||
+            agency.contact_linkedin_url) && (
             <div>
               <p className="font-semibold mb-3">Contact</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -239,6 +243,19 @@ export function AgencyDetail({ agency, interactions, reminders }: AgencyDetailPr
                     <Phone className="w-5 h-5 text-muted-foreground" />
                     <a href={`tel:${agency.contact_phone}`} className="font-medium hover:underline">
                       {agency.contact_phone}
+                    </a>
+                  </div>
+                )}
+                {agency.contact_linkedin_url && (
+                  <div className="flex items-center gap-3">
+                    <Linkedin className="w-5 h-5 text-muted-foreground" />
+                    <a
+                      href={agency.contact_linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium hover:underline"
+                    >
+                      Profil LinkedIn
                     </a>
                   </div>
                 )}

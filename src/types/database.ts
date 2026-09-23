@@ -427,6 +427,7 @@ export type Database = {
           contact_role: string | null
           contact_email: string | null
           contact_phone: string | null
+          contact_linkedin_url: string | null
           preferred_channel: 'email' | 'linkedin' | 'phone' | 'other' | null
           status_id: string | null
           source_id: string | null
@@ -452,6 +453,7 @@ export type Database = {
           contact_role?: string | null
           contact_email?: string | null
           contact_phone?: string | null
+          contact_linkedin_url?: string | null
           preferred_channel?: 'email' | 'linkedin' | 'phone' | 'other' | null
           status_id?: string | null
           source_id?: string | null
@@ -477,6 +479,7 @@ export type Database = {
           contact_role?: string | null
           contact_email?: string | null
           contact_phone?: string | null
+          contact_linkedin_url?: string | null
           preferred_channel?: 'email' | 'linkedin' | 'phone' | 'other' | null
           status_id?: string | null
           source_id?: string | null
