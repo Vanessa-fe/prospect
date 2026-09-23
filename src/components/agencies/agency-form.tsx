@@ -74,6 +74,8 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isFindingContact, setIsFindingContact] = useState(false)
   const [contactCandidates, setContactCandidates] = useState<ContactCandidate[] | null>(null)
+  const [searchFirstName, setSearchFirstName] = useState('')
+  const [searchLastName, setSearchLastName] = useState('')
 
   const isEditing = !!agency
 
@@ -195,11 +197,17 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
     setIsFindingContact(true)
     setContactCandidates(null)
 
+    const isTargetedSearch = !!(searchFirstName.trim() && searchLastName.trim())
+
     try {
       const response = await fetch('/api/agencies/find-contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ website }),
+        body: JSON.stringify({
+          website,
+          firstName: searchFirstName.trim() || undefined,
+          lastName: searchLastName.trim() || undefined,
+        }),
       })
 
       const result = await response.json()
@@ -218,7 +226,9 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
       if (!result.candidates || result.candidates.length === 0) {
         toast({
           title: 'Aucun résultat',
-          description: 'Hunter.io n\'a trouvé aucun contact pour ce domaine',
+          description: isTargetedSearch
+            ? 'Hunter.io n\'a pas trouvé d\'email public pour cette personne'
+            : 'Hunter.io n\'a trouvé aucun contact pour ce domaine',
         })
       }
     } catch (err) {
@@ -453,6 +463,35 @@ export function AgencyForm({ agency, statuses, sources, onSuccess }: AgencyFormP
                 )}
                 <span className="ml-2">Trouver un contact</span>
               </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="searchFirstName">Chercher une personne précise (optionnel)</Label>
+                <Input
+                  id="searchFirstName"
+                  placeholder="Prénom"
+                  value={searchFirstName}
+                  onChange={(e) => setSearchFirstName(e.target.value)}
+                  disabled={isLoading || isFindingContact}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="searchLastName" className="md:invisible">
+                  Nom
+                </Label>
+                <Input
+                  id="searchLastName"
+                  placeholder="Nom"
+                  value={searchLastName}
+                  onChange={(e) => setSearchLastName(e.target.value)}
+                  disabled={isLoading || isFindingContact}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2 md:col-span-2">
+                Laisse vide pour un balayage global du domaine (limité aux 10 premiers
+                résultats), ou renseigne un nom pour cibler directement cette personne.
+              </p>
             </div>
 
             {contactCandidates && contactCandidates.length > 0 && (

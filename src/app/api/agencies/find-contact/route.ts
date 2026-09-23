@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { extractDomain } from '@/lib/validations/agency'
 
 const HUNTER_DOMAIN_SEARCH_URL = 'https://api.hunter.io/v2/domain-search'
+const HUNTER_EMAIL_FINDER_URL = 'https://api.hunter.io/v2/email-finder'
 
 // Mots-clés indiquant un profil décisionnaire technique (CTO / Tech Lead),
 // utilisés pour classer les résultats Hunter par pertinence plutôt que de
@@ -47,6 +48,15 @@ type HunterEmail = {
   confidence: number | null
 }
 
+type HunterPerson = {
+  email: string | null
+  first_name: string | null
+  last_name: string | null
+  position: string | null
+  linkedin_url: string | null
+  score: number | null
+}
+
 type Candidate = {
   name: string | null
   position: string | null
@@ -65,12 +75,11 @@ type Candidate = {
  * cherche). On les garde uniquement comme départage de tri, jamais comme
  * déclencheur du badge.
  */
-function isTechLeadTitle(email: HunterEmail): boolean {
-  const position = email.position || ''
-  return TECH_LEAD_PATTERNS.some((pattern) => pattern.test(position))
+function isTechLeadTitle(position: string | null): boolean {
+  return TECH_LEAD_PATTERNS.some((pattern) => pattern.test(position || ''))
 }
 
-function sortScore(email: HunterEmail, titleMatch: boolean): number {
+function sortScore(email: Pick<HunterEmail, 'department' | 'seniority' | 'decision_maker'>, titleMatch: boolean): number {
   let score = titleMatch ? 10 : 0
 
   if (email.department === 'it' && email.seniority === 'executive') {
@@ -81,6 +90,25 @@ function sortScore(email: HunterEmail, titleMatch: boolean): number {
   }
 
   return score
+}
+
+function handleHunterError(status: number) {
+  if (status === 401 || status === 403) {
+    return NextResponse.json(
+      { error: 'Clé API Hunter.io invalide ou quota dépassé' },
+      { status }
+    )
+  }
+  if (status === 429) {
+    return NextResponse.json(
+      { error: 'Trop de requêtes envoyées à Hunter.io, réessayez dans un instant' },
+      { status: 429 }
+    )
+  }
+  return NextResponse.json(
+    { error: 'Impossible d\'interroger Hunter.io pour le moment' },
+    { status: 502 }
+  )
 }
 
 export async function POST(request: Request) {
@@ -106,6 +134,8 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null)
     const website = body && typeof body.website === 'string' ? body.website : null
+    const firstName = body && typeof body.firstName === 'string' ? body.firstName.trim() : ''
+    const lastName = body && typeof body.lastName === 'string' ? body.lastName.trim() : ''
 
     if (!website) {
       return NextResponse.json({ error: 'Le site web est requis' }, { status: 400 })
@@ -116,6 +146,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Impossible d\'extraire un nom de domaine de cette URL' }, { status: 400 })
     }
 
+    // Recherche ciblée par nom (Email Finder) plutôt que le balayage global du
+    // domaine (Domain Search) : utile quand la personne cherchée n'est pas
+    // dans le top 10 remonté par le plan gratuit (ex: pas assez de présence
+    // publique face aux profils "executive" que Hunter priorise). Hunter ne
+    // facture aucun crédit quand cette recherche ciblée ne trouve rien.
+    if (firstName && lastName) {
+      const finderUrl = `${HUNTER_EMAIL_FINDER_URL}?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(firstName)}&last_name=${encodeURIComponent(lastName)}`
+
+      const response = await fetch(finderUrl, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      })
+
+      if (!response.ok && response.status !== 404) {
+        return handleHunterError(response.status)
+      }
+
+      const json = await response.json().catch(() => null)
+      const person: HunterPerson | null = json?.data || null
+
+      if (!person || !person.email) {
+        return NextResponse.json({ domain, organization: null, candidates: [], totalFound: 0 })
+      }
+
+      const titleMatch = isTechLeadTitle(person.position)
+      const candidates: Candidate[] = [
+        {
+          name: [person.first_name, person.last_name].filter(Boolean).join(' ') || null,
+          position: person.position,
+          email: person.email,
+          linkedinUrl: person.linkedin_url,
+          confidence: person.score,
+          seniority: null,
+          isTechLead: titleMatch,
+        },
+      ]
+
+      return NextResponse.json({ domain, organization: null, candidates, totalFound: 1 })
+    }
+
     const searchUrl = `${HUNTER_DOMAIN_SEARCH_URL}?domain=${encodeURIComponent(domain)}&limit=10`
 
     const response = await fetch(searchUrl, {
@@ -123,22 +192,7 @@ export async function POST(request: Request) {
     })
 
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        return NextResponse.json(
-          { error: 'Clé API Hunter.io invalide ou quota dépassé' },
-          { status: response.status }
-        )
-      }
-      if (response.status === 429) {
-        return NextResponse.json(
-          { error: 'Trop de requêtes envoyées à Hunter.io, réessayez dans un instant' },
-          { status: 429 }
-        )
-      }
-      return NextResponse.json(
-        { error: 'Impossible d\'interroger Hunter.io pour le moment' },
-        { status: 502 }
-      )
+      return handleHunterError(response.status)
     }
 
     const json = await response.json()
@@ -147,7 +201,7 @@ export async function POST(request: Request) {
     const ranked = emails
       .filter((email) => !!email.value)
       .map((email) => {
-        const titleMatch = isTechLeadTitle(email)
+        const titleMatch = isTechLeadTitle(email.position)
         const candidate: Candidate = {
           name: [email.first_name, email.last_name].filter(Boolean).join(' ') || null,
           position: email.position,
